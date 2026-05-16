@@ -13,203 +13,429 @@ CLINIC INFO:
 - Booking: Via WhatsApp (+91 94351 66121), Practo (search DRBPLUS), or DaySchedule
 
 SERVICES:
-Depression & Anxiety, Bipolar Disorder, Schizophrenia, OCD, ADHD, Addiction & De-addiction, Child & Adolescent Psychiatry, Counselling & Psychotherapy
+- General Psychiatry consultations
+- Depression & Anxiety treatment
+- Bipolar Disorder management
+- Schizophrenia & Psychosis treatment
+- OCD treatment
+- ADHD assessment and management
+- Dementia & Memory disorders
+- Addiction & De-addiction services
+- Child & Adolescent Psychiatry
+- Psychotherapy & Counselling
+- Online / Teleconsultation available
 
-FEES:
-- New Consultation: Rs 500 to 800
-- Follow-up: Rs 300 to 500
+APPOINTMENT BOOKING:
+- WhatsApp: +91 94351 66121
+- Practo: Search "DRBPLUS"
+- DaySchedule: Available online
+- Walk-ins welcome during clinic hours
 
-CRISIS HELPLINES (always share in crisis):
-- iCall: 9152987821
-- Vandrevala Foundation: 1860-2662-345 (24/7)
-- Snehi: 044-24640050
-
-RULES:
-- Be warm, empathetic, and professional
-- Never diagnose or prescribe medication
-- For crisis or suicidal thoughts, always share helplines immediately
-- For appointments, direct to WhatsApp +91 94351 66121
+IMPORTANT GUIDELINES:
+- Always be warm, empathetic, and non-judgmental
+- Encourage users to book appointments for medical concerns
+- Never diagnose or prescribe — always recommend consulting Dr. Borthakur
+- For emergencies or crises, provide NIMHANS helpline: 080-46110007 and iCall: 9152987821
+- Respond in the same language the user writes in (Hindi, Assamese, or English)
 - Keep responses concise and helpful
-- Respond in the same language the patient uses (English, Hindi, or Assamese)`;
+- If someone seems distressed, show empathy first before giving information`;
 
-const QUICK_OPTIONS = [
-  { label: "📅 Book Appointment", text: "I want to book an appointment" },
-  { label: "💊 Services", text: "What services do you offer?" },
-  { label: "💰 Fees", text: "What are the consultation fees?" },
-  { label: "📍 Location", text: "Where are your clinics located?" },
-  { label: "🕐 Timings", text: "What are your clinic timings?" },
-  { label: "🆘 Crisis Help", text: "I need urgent mental health support" },
+const SUGGESTED_QUESTIONS = [
+  "How do I book an appointment?",
+  "What are the clinic timings?",
+  "Do you offer online consultations?",
+  "What conditions does Dr. Borthakur treat?",
 ];
 
-function BubbleText({ text }) {
-  return (
-    <span>
-      {text.split("\n").map((line, i, arr) => (
-        <span key={i}>
-          {line.split(/(\*\*.*?\*\*|\*.*?\*)/).map((part, j) => {
-            if (part.startsWith("**") && part.endsWith("**"))
-              return <strong key={j}>{part.slice(2, -2)}</strong>;
-            if (part.startsWith("*") && part.endsWith("*"))
-              return <em key={j}>{part.slice(1, -1)}</em>;
-            return <span key={j}>{part}</span>;
-          })}
-          {i < arr.length - 1 && <br />}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-export default function DRBPlusChatbot() {
-  const [messages, setMessages] = useState([]);
+export default function App() {
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Namaste! 🙏 I'm the DRBPLUS virtual assistant. I can help you with appointment booking, clinic information, and general queries about our services.\n\nHow can I assist you today?",
+    },
+  ]);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [started, setStarted] = useState(false);
-  const [showOptions, setShowOptions] = useState(true);
-  const bottomRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
-
-  const addBotMessage = (text) => {
-    setMessages(prev => [...prev, { from: "bot", text, id: Date.now() }]);
-  };
-
-  const handleStart = () => {
-    setStarted(true);
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      addBotMessage("Hello! Welcome to DRBPLUS — the neuropsychiatric clinic of Dr. Biswadeep Borthakur.\n\nI am your AI assistant. You can type anything or use the quick options below. How can I help you today?");
-    }, 800);
-  };
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const sendMessage = async (text) => {
-    if (!text.trim()) return;
-    setShowOptions(false);
+    const userText = text || input.trim();
+    if (!userText || loading) return;
+
     setInput("");
-    setMessages(prev => [...prev, { from: "user", text, id: Date.now() }]);
-    setIsTyping(true);
+    setError(null);
+
+    const newMessages = [...messages, { role: "user", content: userText }];
+    setMessages(newMessages);
+    setLoading(true);
 
     try {
-      const history = messages.map(m => ({
-        role: m.from === "user" ? "user" : "assistant",
-        content: m.text
-      }));
-
-      const response = await fetch("/api/chat", {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "anthropic-dangerous-direct-browser-calls": "true",
+        },
         body: JSON.stringify({
-          model: "claude-opus-4-5",
-          max_tokens: 500,
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1024,
           system: CLINIC_CONTEXT,
-          messages: [...history, { role: "user", content: text }],
+          messages: newMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
         }),
       });
 
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData?.error?.message || `API error ${response.status}`);
+      }
+
       const data = await response.json();
-      const reply = data.content?.[0]?.text || "I am sorry, I could not process that. Please call us at +91 94351 66121.";
-      setIsTyping(false);
-      addBotMessage(reply);
-      setShowOptions(true);
-    } catch {
-      setIsTyping(false);
-      addBotMessage("Sorry, I am having trouble connecting. Please call us at +91 94351 66121 or WhatsApp us.");
-      setShowOptions(true);
+      const assistantMessage = data.content?.[0]?.text || "Sorry, I couldn't get a response.";
+
+      setMessages([...newMessages, { role: "assistant", content: assistantMessage }]);
+    } catch (err) {
+      console.error("API Error:", err);
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+      inputRef.current?.focus();
     }
   };
 
-  const handleQuickOption = (opt) => sendMessage(opt.text);
-  const handleSubmit = () => { if (input.trim()) sendMessage(input.trim()); };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const formatMessage = (text) => {
+    return text.split("\n").map((line, i) => (
+      <span key={i}>
+        {line}
+        {i < text.split("\n").length - 1 && <br />}
+      </span>
+    ));
+  };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #091520 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "Georgia, serif", padding: "16px",
-    }}>
-      <div style={{
-        width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column",
-        height: "92vh", maxHeight: "780px", borderRadius: "24px", overflow: "hidden",
-        boxShadow: "0 32px 80px rgba(0,0,0,0.6)", background: "#ECE5DD",
-      }}>
-        <div style={{
-          background: "linear-gradient(135deg, #075E54, #128C7E)",
-          padding: "14px 18px", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: "50%",
-            background: "linear-gradient(135deg, #25D366, #128C7E)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 20, color: "#fff", flexShrink: 0,
-          }}>🧠</div>
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div style={styles.headerLeft}>
+          <div style={styles.avatar}>DR</div>
           <div>
-            <div style={{ color: "#fff", fontWeight: "bold", fontSize: 15 }}>DRBPLUS</div>
-            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, fontFamily: "Arial, sans-serif" }}>Dr. Biswadeep Borthakur • AI Assistant</div>
-          </div>
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#25D366" }} />
-            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontFamily: "Arial, sans-serif" }}>AI Online</span>
+            <div style={styles.headerTitle}>DRBPLUS Assistant</div>
+            <div style={styles.headerSubtitle}>Dr. Biswadeep Borthakur's Clinic</div>
           </div>
         </div>
-
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-          {!started && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 16, padding: "40px 20px" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, #075E54, #25D366)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>🧠</div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 20, fontWeight: "bold", color: "#075E54" }}>DRBPLUS AI Assistant</div>
-                <div style={{ fontSize: 12, color: "#666", marginTop: 4, fontFamily: "Arial, sans-serif" }}>Powered by Claude AI</div>
-                <div style={{ fontSize: 11, color: "#888", marginTop: 2, fontFamily: "Arial, sans-serif" }}>Margherita & Digboi, Assam</div>
-              </div>
-              <button onClick={handleStart} style={{ background: "linear-gradient(135deg, #075E54, #128C7E)", color: "#fff", border: "none", borderRadius: 24, padding: "12px 32px", fontSize: 14, fontWeight: "bold", fontFamily: "Arial, sans-serif", cursor: "pointer" }}>Start Chat</button>
-            </div>
-          )}
-
-          {messages.map((msg) => (
-            <div key={msg.id} style={{ display: "flex", justifyContent: msg.from === "user" ? "flex-end" : "flex-start" }}>
-              <div style={{ maxWidth: "82%", background: msg.from === "user" ? "#DCF8C6" : "#fff", borderRadius: msg.from === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", padding: "10px 14px", fontSize: 13, fontFamily: "Arial, sans-serif", lineHeight: 1.55, color: "#1a1a1a", boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}>
-                <BubbleText text={msg.text} />
-              </div>
-            </div>
-          ))}
-
-          {isTyping && (
-            <div style={{ display: "flex", justifyContent: "flex-start" }}>
-              <div style={{ background: "#fff", borderRadius: "18px 18px 18px 4px", padding: "12px 16px", display: "flex", gap: 5, alignItems: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}>
-                {[0,1,2].map(i => (
-                  <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#128C7E", animation: "bounce 1.2s infinite", animationDelay: `${i*0.2}s` }} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {started && showOptions && !isTyping && messages.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-              {QUICK_OPTIONS.map((opt, i) => (
-                <button key={i} onClick={() => handleQuickOption(opt)} style={{ background: "#fff", border: "1.5px solid #128C7E", borderRadius: 16, padding: "6px 12px", fontSize: 11, color: "#075E54", fontWeight: "600", fontFamily: "Arial, sans-serif", cursor: "pointer" }}>{opt.label}</button>
-              ))}
-            </div>
-          )}
-
-          <div ref={bottomRef} />
+        <div style={styles.onlineBadge}>
+          <span style={styles.onlineDot}></span>
+          Online
         </div>
+      </div>
 
-        {started && (
-          <div style={{ padding: "10px 12px", background: "#f0f0f0", borderTop: "1px solid #ddd", display: "flex", gap: 8, flexShrink: 0 }}>
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSubmit()} placeholder="Type your message..." style={{ flex: 1, border: "none", borderRadius: 20, padding: "10px 16px", fontSize: 13, fontFamily: "Arial, sans-serif", outline: "none", background: "#fff" }} />
-            <button onClick={handleSubmit} style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: input.trim() ? "linear-gradient(135deg, #075E54, #128C7E)" : "#ccc", cursor: input.trim() ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>➤</button>
+      {/* Messages */}
+      <div style={styles.messagesContainer}>
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            style={{
+              ...styles.messageRow,
+              justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
+            }}
+          >
+            {msg.role === "assistant" && <div style={styles.botAvatar}>DR</div>}
+            <div
+              style={{
+                ...styles.bubble,
+                ...(msg.role === "user" ? styles.userBubble : styles.botBubble),
+              }}
+            >
+              {formatMessage(msg.content)}
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <div style={{ ...styles.messageRow, justifyContent: "flex-start" }}>
+            <div style={styles.botAvatar}>DR</div>
+            <div style={{ ...styles.bubble, ...styles.botBubble }}>
+              <div style={styles.typingDots}>
+                <span style={{ ...styles.dot, animationDelay: "0ms" }}></span>
+                <span style={{ ...styles.dot, animationDelay: "150ms" }}></span>
+                <span style={{ ...styles.dot, animationDelay: "300ms" }}></span>
+              </div>
+            </div>
           </div>
         )}
 
-        <div style={{ background: "#f0f0f0", padding: "6px", textAlign: "center", fontSize: 10, color: "#999", fontFamily: "Arial, sans-serif" }}>
-          DRBPLUS • AI-Powered • Emergencies: call 112
-        </div>
+        {error && (
+          <div style={styles.errorBox}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
       </div>
-      <style>{`@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }`}</style>
+
+      {/* Suggested Questions — show only at the start */}
+      {messages.length === 1 && (
+        <div style={styles.suggestionsContainer}>
+          {SUGGESTED_QUESTIONS.map((q, i) => (
+            <button key={i} style={styles.suggestionBtn} onClick={() => sendMessage(q)}>
+              {q}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
+      <div style={styles.inputArea}>
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type your message… (Enter to send)"
+          style={styles.textarea}
+          rows={1}
+          disabled={loading}
+        />
+        <button
+          onClick={() => sendMessage()}
+          disabled={!input.trim() || loading}
+          style={{
+            ...styles.sendBtn,
+            opacity: !input.trim() || loading ? 0.5 : 1,
+            cursor: !input.trim() || loading ? "not-allowed" : "pointer",
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+
+      {/* Footer */}
+      <div style={styles.footer}>
+        📍 Margherita & Digboi, Assam &nbsp;|&nbsp; 📞 +91 94351 66121 &nbsp;|&nbsp; Mon–Sat 10AM–6PM
+      </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-6px); }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        textarea:focus { outline: none; }
+        button:focus { outline: none; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 4px; }
+      `}</style>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    height: "100vh",
+    maxWidth: "720px",
+    margin: "0 auto",
+    backgroundColor: "#f8f9fa",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "14px 20px",
+    backgroundColor: "#0a5c44",
+    color: "white",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  avatar: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "50%",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "700",
+    fontSize: "14px",
+    color: "white",
+    border: "2px solid rgba(255,255,255,0.4)",
+  },
+  headerTitle: {
+    fontWeight: "600",
+    fontSize: "16px",
+  },
+  headerSubtitle: {
+    fontSize: "12px",
+    opacity: 0.85,
+    marginTop: "2px",
+  },
+  onlineBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    fontSize: "12px",
+    backgroundColor: "rgba(255,255,255,0.15)",
+    padding: "4px 10px",
+    borderRadius: "20px",
+  },
+  onlineDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    backgroundColor: "#4ade80",
+    display: "inline-block",
+  },
+  messagesContainer: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "20px 16px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  messageRow: {
+    display: "flex",
+    alignItems: "flex-end",
+    gap: "8px",
+  },
+  botAvatar: {
+    width: "30px",
+    height: "30px",
+    borderRadius: "50%",
+    backgroundColor: "#0a5c44",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "10px",
+    fontWeight: "700",
+    flexShrink: 0,
+  },
+  bubble: {
+    maxWidth: "75%",
+    padding: "10px 14px",
+    borderRadius: "18px",
+    fontSize: "14px",
+    lineHeight: "1.5",
+    wordBreak: "break-word",
+  },
+  botBubble: {
+    backgroundColor: "white",
+    color: "#1a1a1a",
+    borderBottomLeftRadius: "4px",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+  },
+  userBubble: {
+    backgroundColor: "#0a5c44",
+    color: "white",
+    borderBottomRightRadius: "4px",
+  },
+  typingDots: {
+    display: "flex",
+    gap: "4px",
+    alignItems: "center",
+    padding: "4px 2px",
+  },
+  dot: {
+    width: "7px",
+    height: "7px",
+    borderRadius: "50%",
+    backgroundColor: "#aaa",
+    display: "inline-block",
+    animation: "bounce 1.2s infinite",
+  },
+  errorBox: {
+    backgroundColor: "#fff3f3",
+    border: "1px solid #fca5a5",
+    color: "#b91c1c",
+    padding: "10px 14px",
+    borderRadius: "10px",
+    fontSize: "13px",
+    margin: "0 4px",
+  },
+  suggestionsContainer: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    padding: "4px 16px 12px",
+  },
+  suggestionBtn: {
+    backgroundColor: "white",
+    border: "1px solid #d1d5db",
+    borderRadius: "20px",
+    padding: "7px 14px",
+    fontSize: "13px",
+    color: "#0a5c44",
+    cursor: "pointer",
+    transition: "all 0.15s",
+  },
+  inputArea: {
+    display: "flex",
+    alignItems: "flex-end",
+    gap: "8px",
+    padding: "12px 16px",
+    backgroundColor: "white",
+    borderTop: "1px solid #e5e7eb",
+  },
+  textarea: {
+    flex: 1,
+    border: "1px solid #d1d5db",
+    borderRadius: "22px",
+    padding: "10px 16px",
+    fontSize: "14px",
+    resize: "none",
+    fontFamily: "inherit",
+    backgroundColor: "#f9fafb",
+    color: "#1a1a1a",
+    lineHeight: "1.4",
+    maxHeight: "120px",
+    overflowY: "auto",
+  },
+  sendBtn: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "50%",
+    border: "none",
+    backgroundColor: "#0a5c44",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    transition: "background 0.15s",
+  },
+  footer: {
+    textAlign: "center",
+    padding: "8px 16px",
+    fontSize: "11px",
+    color: "#6b7280",
+    backgroundColor: "white",
+    borderTop: "1px solid #f3f4f6",
+  },
+};
