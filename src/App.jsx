@@ -5,12 +5,12 @@ const CLINIC_CONTEXT = `You are the friendly AI assistant for DRBPLUS Neuropsych
 CLINIC INFO:
 - Doctor: Dr. Biswadeep Borthakur (Psychiatrist)
 - Locations: Margherita (NH 315, Margherita 786181, Assam) and Digboi, Assam
-- Hours: Monday to Saturday, 10 AM to 6 PM (Sunday closed)
+- Hours: Margherita 9 AM to 2 PM daily except Saturday (Saturday closed), plus 5:30 PM to 7 PM by prior appointment only. Digboi Monday to Friday 2:30 PM to 5 PM.
 - Phone/WhatsApp: +91 94351 66121
 - Email: drbborthakur@gmail.com
 - Instagram: @drb_plus
 - Facebook: DRB PLUS Neuro-Psychiatric Clinic
-- Booking: Via WhatsApp (+91 94351 66121), Practo (search DRBPLUS), or DaySchedule
+- Booking: Chat with us on WhatsApp +91 94351 66121 (quickest way), or Practo (search DRBPLUS), or DaySchedule.
 
 SERVICES:
 - General Psychiatry consultations
@@ -26,7 +26,7 @@ SERVICES:
 - Online / Teleconsultation available
 
 APPOINTMENT BOOKING:
-- WhatsApp: +91 94351 66121
+- WhatsApp: +91 94351 66121 (Chat with us — quickest way)
 - Practo: Search "DRBPLUS"
 - DaySchedule: Available online
 - Walk-ins welcome during clinic hours
@@ -227,9 +227,19 @@ export default function App() {
         </button>
       </div>
 
+      {/* WhatsApp CTA */}
+      <a
+        href="https://wa.me/919435166121?text=Hi%2C%20I'd%20like%20to%20book%20an%20appointment%20at%20DRB%20PLUS%20Clinic"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={styles.whatsappCta}
+      >
+        💬 Chat with us on WhatsApp – DRB PLUS Clinic
+      </a>
+
       {/* Footer */}
       <div style={styles.footer}>
-        📍 Margherita & Digboi, Assam &nbsp;|&nbsp; 📞 +91 94351 66121 &nbsp;|&nbsp; Mon–Sat 10AM–6PM
+        📍 Margherita & Digboi, Assam &nbsp;|&nbsp; 📞 +91 94351 66121
       </div>
 
       <style>{`
@@ -428,6 +438,16 @@ const styles = {
     justifyContent: "center",
     flexShrink: 0,
     transition: "background 0.15s",
+  },
+  whatsappCta: {
+    display: "block",
+    textAlign: "center",
+    padding: "11px 16px",
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "white",
+    backgroundColor: "#25D366",
+    textDecoration: "none",
   },
   footer: {
     textAlign: "center",
