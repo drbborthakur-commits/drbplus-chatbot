@@ -120,8 +120,30 @@ export default function App() {
   );
 }
 
+// Light formatting for AI replies: **bold**, "- " / "* " bullets, stray markdown removed
+function fmt(text) {
+  if (typeof text !== "string") return text;
+  const lines = text.replace(/^#+\s*/gm, "").split("\n");
+  return lines.map((line, i) => {
+    const bullet = /^\s*[-*•]\s+/.test(line);
+    const body = line.replace(/^\s*[-*•]\s+/, "");
+    const parts = body.split(/\*\*(.+?)\*\*/g).map((p, k) => (k % 2 ? <strong key={k}>{p}</strong> : p));
+    return (
+      <span key={i}>
+        {bullet ? "• " : ""}{parts}
+        {i < lines.length - 1 && "\n"}
+      </span>
+    );
+  });
+}
+
 function Bubble({ role, note, children }) {
-  return <div className={`bubble ${role === "user" ? "me" : "bot"} ${note ? "note" : ""}`}>{children}</div>;
+  const kids = Array.isArray(children) ? children : [children];
+  return (
+    <div className={`bubble ${role === "user" ? "me" : "bot"} ${note ? "note" : ""}`}>
+      {kids.map((c, i) => (typeof c === "string" ? <span key={i}>{fmt(c)}</span> : c))}
+    </div>
+  );
 }
 
 function Timings({ t }) {
