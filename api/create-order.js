@@ -34,6 +34,9 @@ export default async function handler(req, res) {
     }),
   });
   const order = await r.json();
-  if (!r.ok) return res.status(502).json({ error: order?.error?.description || "Could not start payment." });
+  if (!r.ok) {
+    console.error("Razorpay order error:", order?.error?.description);
+    return res.status(502).json({ error: "Online payment is not available right now. Please WhatsApp +91 94351 66121 to book." });
+  }
   return res.status(200).json({ orderId: order.id, amount: order.amount, keyId });
 }
