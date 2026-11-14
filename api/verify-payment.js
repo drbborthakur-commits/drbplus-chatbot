@@ -7,7 +7,7 @@ import { CLINIC } from "../config/clinic.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
-  const secret = process.env.RAZORPAY_KEY_SECRET;
+  const secret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !secret)
     return res.status(400).json({ error: "Missing payment details." });
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   if (!ok) return res.status(400).json({ error: "Payment could not be verified." });
 
   // Read the booking details from Razorpay itself (not from the browser)
-  const auth = "Basic " + Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${secret}`).toString("base64");
+  const auth = "Basic " + Buffer.from(`${(process.env.RAZORPAY_KEY_ID || "").trim()}:${secret}`).toString("base64");
   const r = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`, { headers: { Authorization: auth } });
   const order = await r.json();
   if (!r.ok) return res.status(502).json({ error: "Paid, but could not read the order. Please WhatsApp the clinic with your payment ID." });

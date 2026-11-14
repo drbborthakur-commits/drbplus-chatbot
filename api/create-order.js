@@ -11,8 +11,8 @@ export default async function handler(req, res) {
   if (digits.length !== 10) return res.status(400).json({ error: "Please enter a 10-digit mobile number." });
   if (!isValidBooking(clinic, date)) return res.status(400).json({ error: "That date is not available for this clinic. Please pick another." });
 
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const secret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = (process.env.RAZORPAY_KEY_ID || "").trim();
+  const secret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
   if (!keyId || !secret) return res.status(500).json({ error: "Online payment is not set up yet. Please WhatsApp the clinic." });
 
   const clip = (v, n) => String(v || "").slice(0, n);
