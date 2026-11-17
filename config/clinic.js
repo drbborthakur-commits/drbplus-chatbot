@@ -17,6 +17,7 @@ export const CLINIC = {
   company: "DRB PLUS PRIVATE LIMITED",
 
   feeRupees: 500,                    // advance booking fee (₹)
+  bookingUrl: "https://pages.razorpay.com/drbplus", // Razorpay booking page (UPI, card, netbanking, wallet)
   bookingDaysAhead: 30,              // how far ahead patients can book
 
   // Days: 0 = Sunday … 6 = Saturday. endHour = 24-hour clock (IST).
@@ -111,7 +112,7 @@ ${clinics}
 - Consultation fee: ₹${CLINIC.feeRupees}, same for advance booking and walk-in.
 
 BOOKING
-- Patients can book in this chat: choose clinic and date, then pay ₹${CLINIC.feeRupees} by Razorpay (UPI, card, netbanking). They get a booking ID; patients are seen in order of arrival on that day.
+- Patients book online at ${CLINIC.bookingUrl}: fill name, phone, age, clinic, preferred date, then pay ₹${CLINIC.feeRupees} by UPI, card, netbanking or wallet. The Razorpay receipt is their booking confirmation; patients are seen in order of arrival on that day.
 - When the user wants to book, or seems ready to, give one short line and end your reply with the exact tag [[BOOK]] (the app turns it into a "Book now" button).
 - Walk-ins are also welcome during clinic hours.
 - Refunds or date changes: ask them to WhatsApp ${CLINIC.phone} with their booking ID.

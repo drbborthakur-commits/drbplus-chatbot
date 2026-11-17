@@ -3,6 +3,7 @@ import { CLINIC, availableDates } from "../config/clinic.js";
 import { LANGS, T } from "./i18n.js";
 import { SCREENERS, bandFor } from "./screeners.js";
 
+const openBooking = () => window.open(CLINIC.bookingUrl, "_blank", "noopener");
 const waLink = (text) => `https://wa.me/${CLINIC.whatsapp}?text=${encodeURIComponent(text)}`;
 const store = {
   get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
@@ -68,7 +69,7 @@ export default function App() {
       </header>
 
       <nav className="chips">
-        <button className="chip primary" onClick={() => setSheet("book")}>📅 {t.book} · ₹{CLINIC.feeRupees}</button>
+        <button className="chip primary" onClick={openBooking}>📅 {t.book} · ₹{CLINIC.feeRupees}</button>
         <button className="chip" onClick={() => setSheet("check")}>📝 {t.check}</button>
         <button className="chip" onClick={() => push({ role: "assistant", kind: "timings" })}>📍 {t.timings}</button>
         <a className="chip" href={waLink("Hello, I have a query for DRB PLUS clinic.")} target="_blank" rel="noreferrer">💬 {t.call}</a>
@@ -79,13 +80,13 @@ export default function App() {
         {messages.map((m, i) => {
           if (m.kind === "timings") return <Timings key={i} t={t} />;
           if (m.kind === "confirm") return <Confirm key={i} t={t} b={m.booking} recorded={m.recorded} />;
-          if (m.kind === "result") return <Result key={i} t={t} r={m.result} onBook={() => setSheet("book")} />;
+          if (m.kind === "result") return <Result key={i} t={t} r={m.result} onBook={openBooking} />;
           return (
             <Bubble key={i} role={m.role} note={m.kind === "note"}>
               {m.content}
               {m.actions?.length > 0 && (
                 <div className="acts">
-                  {m.actions.includes("book") && <button onClick={() => setSheet("book")}>{t.bookNow}</button>}
+                  {m.actions.includes("book") && <button onClick={openBooking}>{t.bookNow}</button>}
                   {m.actions.includes("check") && <button onClick={() => setSheet("check")}>{t.startCheck}</button>}
                 </div>
               )}
