@@ -119,7 +119,7 @@ export default function App() {
               />
               <button type="submit" disabled={!input.trim() || loading} aria-label={t.send}>➤</button>
             </form>
-            <p className="fine">{t.disclaimer} · <a href={CLINIC.website} target="_blank" rel="noreferrer">drbplus.com</a></p>
+            <p className="fine">{t.disclaimer} · <a href={CLINIC.website} target="_blank" rel="noreferrer">drbplus.com</a> · <a href="/policies">Terms · Refund · Privacy · Contact</a></p>
           </footer>
         </>
       )}
