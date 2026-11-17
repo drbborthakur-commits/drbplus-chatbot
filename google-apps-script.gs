@@ -188,7 +188,7 @@ function notifyPatient(bk) {
     MailApp.sendEmail(bk.email, "Your token " + bk.token + " — DRB PLUS " + bk.clinic,
       "Dear " + bk.name + ",\n\nYour online registration is confirmed.\n\nTOKEN: " + bk.token +
       "\nClinic: " + bk.clinic + " — " + bk.place + "\nDate: " + bk.date + "\nTimings: " + bk.timing +
-      "\n\nShow this token at the reception. Please bring old prescriptions and reports.\nTrack your token: https://drbplus-chatbot.vercel.app/track\nFor changes, WhatsApp " + CLINIC_WHATSAPP + ".\n\nDRB PLUS Neuro-Psychiatric Clinic\nhttps://drbplus.com");
+      "\n\nShow this token at the reception. Please bring old prescriptions and reports.\nTrack your token: https://book.drbplus.com/track\nFor changes, WhatsApp " + CLINIC_WHATSAPP + ".\n\nDRB PLUS Neuro-Psychiatric Clinic\nhttps://drbplus.com");
   } else {
     MailApp.sendEmail(bk.email, "Your DRB PLUS booking needs a new date",
       "Dear " + bk.name + ",\n\nWe received your payment of ₹" + bk.amount + " (" + bk.paymentId + "), but " + bk.note +

@@ -86,7 +86,7 @@ export default function Booked() {
             <p className="muted center">📸 Take a screenshot. Show this token at reception. Patients are called in token order; please arrive by the clinic start time and bring old prescriptions and reports.</p>
             <a className="btn wa" href={wa(msg)}>💬 Send my token to the clinic (WhatsApp)</a>
             <a className="btn" href={calendarLink(b)} target="_blank" rel="noreferrer">⏰ Add reminder to my calendar</a>
-            <a className="btn ghost" href={`https://wa.me/?text=${encodeURIComponent(msg + "\nTrack: https://drbplus-chatbot.vercel.app/track")}`}>Save / share on WhatsApp</a>
+            <a className="btn ghost" href={`https://wa.me/?text=${encodeURIComponent(msg + "\nTrack: https://book.drbplus.com/track")}`}>Save / share on WhatsApp</a>
             <a className="btn ghost" href={(CLINIC.clinics.find((c) => c.name === b.clinic) || {}).maps} target="_blank" rel="noreferrer">📍 Directions</a>
           </>
         )}
