@@ -90,3 +90,15 @@ a{color:var(--navy)}
 .t-row strong{text-align:right}
 .btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
 a.btn{display:block}
+/* tabbed app */
+.app.tabbed{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+.app.tabbed .composer{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom))}
+.thread.pane{gap:12px}
+.tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:720px;display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5;box-shadow:0 -4px 14px rgba(12,51,89,.06)}
+.tabbar button{background:none;border:0;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:11.5px;font-weight:500}
+.tabbar .ti{font-size:20px;line-height:1;filter:grayscale(.6);opacity:.8}
+.tabbar button.on{color:var(--navy);font-weight:700}
+.tabbar button.on .ti{filter:none;opacity:1}
+.tabbar button.on::after{content:"";width:22px;height:3px;border-radius:3px;background:var(--coral);margin-top:2px}
+.summary{display:flex;flex-direction:column;gap:4px;background:#eef9f9;border:1px solid #bfe9ea;border-radius:12px;padding:10px 12px;font-size:13.5px}
+.card h3{margin:0}

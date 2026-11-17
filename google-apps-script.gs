@@ -140,7 +140,7 @@ function track(phone) {
   const list = rows().map(r => toObj(r.v))
     .filter(b => String(b.phone).replace(/\D/g, "").slice(-10) === d && (b.date >= today || b.status !== "Confirmed"))
     .map(b => { const x = decorate(b); return { token: x.token, date: x.date, clinic: x.clinic, timing: x.timing, place: x.place,
-      status: x.status, note: x.note, name: maskName(x.name) }; });
+      status: x.status, note: x.note, name: x.name, age: x.age, serial: x.serial, paymentId: x.paymentId }; });
   return { ok: true, bookings: list };
 }
 function maskName(n) { n = String(n || ""); return n ? n.split(" ").map(w => w[0] + "*".repeat(Math.max(0, w.length - 1))).join(" ") : ""; }

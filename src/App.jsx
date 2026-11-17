@@ -3,24 +3,38 @@ import { CLINIC, availableDates } from "../config/clinic.js";
 import { LANGS, T } from "./i18n.js";
 import { SCREENERS, bandFor } from "./screeners.js";
 
-const openBooking = () => window.open(CLINIC.bookingUrl, "_blank", "noopener");
 const waLink = (text) => `https://wa.me/${CLINIC.whatsapp}?text=${encodeURIComponent(text)}`;
 const store = {
   get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
 };
 
+const TABS = [
+  { id: "chat", icon: "💬", key: "tabChat" },
+  { id: "book", icon: "📅", key: "tabBook" },
+  { id: "token", icon: "🎫", key: "tabToken" },
+  { id: "check", icon: "📝", key: "tabCheck" },
+];
+const PATH_TAB = { "/book": "book", "/track": "token", "/token": "token", "/check": "check" };
+
 export default function App() {
   const [lang, setLang] = useState(() => store.get("drb_lang") || "en");
   const t = T[lang] || T.en;
+  const [tab, setTabState] = useState(() => PATH_TAB[window.location.pathname.replace(/\/+$/, "")] || "chat");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sheet, setSheet] = useState(null); // "book" | "check" | null
   const endRef = useRef(null);
 
+  const setTab = (id) => {
+    setTabState(id);
+    const path = id === "chat" ? "/" : id === "token" ? "/track" : "/" + id;
+    try { window.history.replaceState(null, "", path); } catch {}
+    window.scrollTo(0, 0);
+  };
+
   useEffect(() => { store.set("drb_lang", lang); }, [lang]);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+  useEffect(() => { if (tab === "chat") endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading, tab]);
 
   const push = (m) => setMessages((prev) => [...prev, m]);
 
@@ -54,7 +68,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app tabbed">
       <header className="top">
         <img src="/logo-light.png" alt="DRB PLUS" className="logo" />
         <div className="who">
@@ -68,55 +82,63 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="chips">
-        <button className="chip primary" onClick={openBooking}>📅 {t.book} · ₹{CLINIC.feeRupees}</button>
-        <button className="chip" onClick={() => setSheet("check")}>📝 {t.check}</button>
-        <button className="chip" onClick={() => push({ role: "assistant", kind: "timings" })}>📍 {t.timings}</button>
-        <a className="chip" href={waLink("Hello, I have a query for DRB PLUS clinic.")} target="_blank" rel="noreferrer">💬 {t.call}</a>
+      {tab === "chat" && (
+        <>
+          <nav className="chips">
+            <button className="chip primary" onClick={() => setTab("book")}>📅 {t.book} · ₹{CLINIC.feeRupees}</button>
+            <button className="chip" onClick={() => setTab("token")}>🎫 {t.tabToken}</button>
+            <button className="chip" onClick={() => push({ role: "assistant", kind: "timings" })}>📍 {t.timings}</button>
+            <a className="chip" href={waLink("Hello, I have a query for DRB PLUS clinic.")} target="_blank" rel="noreferrer">💬 {t.call}</a>
+          </nav>
+          <main className="thread">
+            <Bubble role="assistant">{t.greeting}</Bubble>
+            {messages.map((m, i) => {
+              if (m.kind === "timings") return <Timings key={i} t={t} />;
+              if (m.kind === "result") return <Result key={i} t={t} r={m.result} onBook={() => setTab("book")} />;
+              return (
+                <Bubble key={i} role={m.role} note={m.kind === "note"}>
+                  {m.content}
+                  {m.actions?.length > 0 && (
+                    <div className="acts">
+                      {m.actions.includes("book") && <button onClick={() => setTab("book")}>{t.bookNow}</button>}
+                      {m.actions.includes("check") && <button onClick={() => setTab("check")}>{t.startCheck}</button>}
+                    </div>
+                  )}
+                </Bubble>
+              );
+            })}
+            {loading && <div className="bubble bot typing"><span /><span /><span /></div>}
+            <div ref={endRef} />
+          </main>
+          <footer className="composer">
+            <form onSubmit={(e) => { e.preventDefault(); ask(); }}>
+              <textarea
+                rows={1} value={input} placeholder={t.placeholder} maxLength={2000}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } }}
+              />
+              <button type="submit" disabled={!input.trim() || loading} aria-label={t.send}>➤</button>
+            </form>
+            <p className="fine">{t.disclaimer} · <a href={CLINIC.website} target="_blank" rel="noreferrer">drbplus.com</a></p>
+          </footer>
+        </>
+      )}
+
+      {tab === "book" && <main className="thread pane"><BookPane t={t} /></main>}
+      {tab === "token" && <main className="thread pane"><TokenPane t={t} onBook={() => setTab("book")} /></main>}
+      {tab === "check" && (
+        <main className="thread pane">
+          <CheckPane t={t} onDone={(result) => { push({ role: "assistant", kind: "result", result }); setTab("chat"); }} />
+        </main>
+      )}
+
+      <nav className="tabbar" aria-label="Sections">
+        {TABS.map((x) => (
+          <button key={x.id} className={tab === x.id ? "on" : ""} onClick={() => setTab(x.id)} aria-current={tab === x.id}>
+            <span className="ti">{x.icon}</span><span className="tl">{t[x.key]}</span>
+          </button>
+        ))}
       </nav>
-
-      <main className="thread">
-        <Bubble role="assistant">{t.greeting}</Bubble>
-        {messages.map((m, i) => {
-          if (m.kind === "timings") return <Timings key={i} t={t} />;
-          if (m.kind === "confirm") return <Confirm key={i} t={t} b={m.booking} recorded={m.recorded} />;
-          if (m.kind === "result") return <Result key={i} t={t} r={m.result} onBook={openBooking} />;
-          return (
-            <Bubble key={i} role={m.role} note={m.kind === "note"}>
-              {m.content}
-              {m.actions?.length > 0 && (
-                <div className="acts">
-                  {m.actions.includes("book") && <button onClick={openBooking}>{t.bookNow}</button>}
-                  {m.actions.includes("check") && <button onClick={() => setSheet("check")}>{t.startCheck}</button>}
-                </div>
-              )}
-            </Bubble>
-          );
-        })}
-        {loading && <div className="bubble bot typing"><span /><span /><span /></div>}
-        <div ref={endRef} />
-      </main>
-
-      <footer className="composer">
-        <form onSubmit={(e) => { e.preventDefault(); ask(); }}>
-          <textarea
-            rows={1} value={input} placeholder={t.placeholder} maxLength={2000}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } }}
-          />
-          <button type="submit" disabled={!input.trim() || loading} aria-label={t.send}>➤</button>
-        </form>
-        <p className="fine">{t.disclaimer} · <a href={CLINIC.website} target="_blank" rel="noreferrer">drbplus.com</a></p>
-      </footer>
-
-      {sheet === "book" && (
-        <BookingSheet t={t} onClose={() => setSheet(null)}
-          onDone={(booking, recorded) => { setSheet(null); push({ role: "assistant", kind: "confirm", booking, recorded }); }} />
-      )}
-      {sheet === "check" && (
-        <CheckSheet t={t} onClose={() => setSheet(null)}
-          onDone={(result) => { setSheet(null); push({ role: "assistant", kind: "result", result }); }} />
-      )}
     </div>
   );
 }
@@ -224,7 +246,7 @@ function loadRazorpay() {
   });
 }
 
-function BookingSheet({ t, onClose, onDone }) {
+function BookPane({ t }) {
   const [clinic, setClinic] = useState("");
   const [date, setDate] = useState("");
   const [f, setF] = useState({ name: "", age: "", phone: "", email: "", reason: "" });
@@ -232,10 +254,18 @@ function BookingSheet({ t, onClose, onDone }) {
   const [err, setErr] = useState("");
   const dates = clinic ? availableDates(clinic) : [];
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const c = CLINIC.clinics.find((x) => x.id === clinic);
+
+  function payOnPage() {
+    store.set("drb_pending", JSON.stringify({ ...f, clinic, date, at: Date.now() }));
+    const q = new URLSearchParams({ phone: f.phone.replace(/\D/g, "").slice(-10), email: f.email || "" });
+    window.location.href = `${CLINIC.bookingUrl}?${q}`;
+  }
 
   async function pay(e) {
     e.preventDefault();
     setErr("");
+    if (!CLINIC.inAppPayment) return payOnPage();
     setBusy(t.paying);
     try {
       const ok = await loadRazorpay();
@@ -246,10 +276,9 @@ function BookingSheet({ t, onClose, onDone }) {
       });
       const o = await r.json();
       if (!r.ok) throw new Error(o.error);
-
       const rzp = new window.Razorpay({
         key: o.keyId, amount: o.amount, currency: "INR", order_id: o.orderId,
-        name: "DRB PLUS", description: `Advance booking — ${clinic}, ${date}`,
+        name: "DRB PLUS", description: `Online registration — ${c?.name}, ${date}`,
         image: "/apple-touch-icon.png",
         prefill: { name: f.name, contact: "+91" + f.phone.replace(/\D/g, "").slice(-10), email: f.email || undefined },
         theme: { color: "#0C3359" },
@@ -257,16 +286,9 @@ function BookingSheet({ t, onClose, onDone }) {
         handler: async (resp) => {
           setBusy(t.verifying);
           try {
-            const v = await fetch("/api/verify-payment", {
-              method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(resp),
-            });
-            const out = await v.json();
-            if (!v.ok) throw new Error(out.error);
-            onDone(out.booking, out.recorded);
-          } catch (ex) {
-            setBusy("");
-            setErr(`${ex.message || "Could not confirm."} Payment ID: ${resp.razorpay_payment_id} — please WhatsApp this to ${CLINIC.phone}.`);
-          }
+            await fetch("/api/verify-payment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(resp) });
+          } catch {}
+          window.location.href = `/booked?razorpay_payment_id=${encodeURIComponent(resp.razorpay_payment_id)}`;
         },
       });
       rzp.on("payment.failed", (resp) => { setBusy(""); setErr(resp.error?.description || t.cancelled); });
@@ -278,51 +300,124 @@ function BookingSheet({ t, onClose, onDone }) {
   }
 
   return (
-    <Sheet title={t.bookTitle} onClose={onClose}>
-      <form onSubmit={pay} className="form">
-        <label className="step">1 · {t.step1}</label>
-        <div className="pick">
-          {CLINIC.clinics.map((c) => (
-            <button type="button" key={c.id} className={clinic === c.id ? "on" : ""} onClick={() => { setClinic(c.id); setDate(""); }}>
-              <strong>{c.name}</strong><span>{c.timing}</span>
-            </button>
-          ))}
-        </div>
-
-        {clinic && (
-          <>
-            <label className="step">2 · {t.step2}</label>
-            {dates.length ? (
-              <div className="dates">
-                {dates.map((d) => (
-                  <button type="button" key={d.iso} className={date === d.iso ? "on" : ""} onClick={() => setDate(d.iso)}>{d.label}</button>
-                ))}
-              </div>
-            ) : <p className="muted">{t.noDates}</p>}
-          </>
-        )}
-
-        {date && (
-          <>
-            <label className="step">3 · {t.step3}</label>
-            <input required placeholder={t.name} value={f.name} onChange={set("name")} autoComplete="name" />
-            <div className="two">
-              <input placeholder={t.age} value={f.age} onChange={set("age")} inputMode="numeric" maxLength={3} />
-              <input required placeholder={t.phone} value={f.phone} onChange={set("phone")} inputMode="tel" autoComplete="tel" />
+    <form onSubmit={pay} className="form card">
+      <h3>{t.bookTitle}</h3>
+      <label className="step">1 · {t.step1}</label>
+      <div className="pick">
+        {CLINIC.clinics.map((x) => (
+          <button type="button" key={x.id} className={clinic === x.id ? "on" : ""} onClick={() => { setClinic(x.id); setDate(""); }}>
+            <strong>{x.name}</strong><span>{x.timing}</span>
+          </button>
+        ))}
+      </div>
+      {clinic && (
+        <>
+          <label className="step">2 · {t.step2}</label>
+          {dates.length ? (
+            <div className="dates">
+              {dates.map((d) => (
+                <button type="button" key={d.iso} className={date === d.iso ? "on" : ""} onClick={() => setDate(d.iso)}>{d.label}</button>
+              ))}
             </div>
-            <input type="email" placeholder={t.email} value={f.email} onChange={set("email")} autoComplete="email" />
-            <input placeholder={t.reason} value={f.reason} onChange={set("reason")} maxLength={200} />
-            {err && <p className="err">{err}</p>}
-            <button className="btn pay" disabled={!!busy}>{busy || t.pay.replace("{fee}", CLINIC.feeRupees)}</button>
-            <p className="muted small">🔒 {t.payNote}</p>
-          </>
-        )}
-      </form>
-    </Sheet>
+          ) : <p className="muted">{t.noDates}</p>}
+        </>
+      )}
+      {date && (
+        <>
+          <label className="step">3 · {t.step3}</label>
+          <input required placeholder={t.name} value={f.name} onChange={set("name")} autoComplete="name" />
+          <div className="two">
+            <input placeholder={t.age} value={f.age} onChange={set("age")} inputMode="numeric" maxLength={3} />
+            <input required placeholder={t.phone} value={f.phone} onChange={set("phone")} inputMode="tel" autoComplete="tel" pattern="[0-9+ ]{10,14}" />
+          </div>
+          <input type="email" placeholder={t.email} value={f.email} onChange={set("email")} autoComplete="email" />
+          <input placeholder={t.reason} value={f.reason} onChange={set("reason")} maxLength={200} />
+          {!CLINIC.inAppPayment && (
+            <div className="summary">
+              <strong>{c?.name} · {dates.find((d) => d.iso === date)?.label}</strong>
+              <span>On the next page, please enter the same clinic (<b>{c?.name}</b>) and date (<b>{date.split("-").reverse().join("-")}</b>).</span>
+            </div>
+          )}
+          {err && <p className="err">{err}</p>}
+          <button className="btn pay" disabled={!!busy}>{busy || (CLINIC.inAppPayment ? t.pay : t.continuePay).replace("{fee}", CLINIC.feeRupees)}</button>
+          <p className="muted small">🔒 {CLINIC.inAppPayment ? t.payNote : t.payPageNote}</p>
+        </>
+      )}
+    </form>
   );
 }
 
-function CheckSheet({ t, onClose, onDone }) {
+function TokenPane({ t, onBook }) {
+  const [otpOn, setOtpOn] = useState(null);
+  const [phone, setPhone] = useState(() => store.get("drb_phone") || "");
+  const [session, setSession] = useState("");
+  const [code, setCode] = useState("");
+  const [last4, setLast4] = useState("");
+  const [list, setList] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => { fetch("/api/otp").then((r) => r.json()).then((j) => setOtpOn(!!j.otp)).catch(() => setOtpOn(false)); }, []);
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  const post = async (url, body) => {
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "Please try again");
+    return j;
+  };
+  async function run(fn) { setErr(""); setBusy(true); try { await fn(); } catch (e) { setErr(e.message); } setBusy(false); }
+
+  const sendOtp = (e) => { e.preventDefault(); run(async () => { const j = await post("/api/otp", { action: "send", phone: digits }); setSession(j.session); }); };
+  const verify = (e) => {
+    e.preventDefault();
+    run(async () => {
+      let body = { phone: digits };
+      if (otpOn) { const j = await post("/api/otp", { action: "verify", phone: digits, session, code }); body.pass = j.pass; }
+      else body.last4 = last4;
+      const out = await post("/api/track", body);
+      store.set("drb_phone", digits);
+      setList(out.bookings);
+    });
+  };
+
+  if (list) return (
+    <>
+      {!list.length && <div className="card"><p>{t.noBookings}</p><button className="btn" onClick={onBook}>📅 {t.book} · ₹{CLINIC.feeRupees}</button></div>}
+      {list.map((b) => (
+        <div key={b.token} className={`ticket ${b.status !== "Confirmed" ? "warn" : ""}`}>
+          <div className="t-label">{b.status === "Confirmed" ? "YOUR TOKEN" : "NEEDS NEW DATE"}</div>
+          <div className="t-no">{b.token}</div>
+          {b.serial ? <div className="t-serial">Serial <strong>{b.serial}</strong> · {b.clinic}</div> : null}
+          <div className="t-row"><span>Patient</span><strong>{b.name}{b.age ? ` (${b.age})` : ""}</strong></div>
+          <div className="t-row"><span>Date</span><strong>{b.date}</strong></div>
+          <div className="t-row"><span>Clinic</span><strong>{b.clinic} · {b.timing}</strong></div>
+          {b.note && <div className="t-row"><span>Note</span><strong>{b.note}</strong></div>}
+          {b.status !== "Confirmed" && <a className="btn wa" href={waLink(`Hello, my booking needs a new date. Ref ${b.token}`)}>💬 WhatsApp to choose a new date</a>}
+        </div>
+      ))}
+      <button className="link center" onClick={() => { setList(null); setSession(""); setCode(""); }}>← Check another number</button>
+    </>
+  );
+
+  return (
+    <form className="card form" onSubmit={otpOn && !session ? sendOtp : verify}>
+      <h3>🎫 {t.tokenTitle}</h3>
+      <p className="muted">{t.tokenIntro}</p>
+      <input inputMode="tel" placeholder={t.phone} value={phone} onChange={(e) => { setPhone(e.target.value); setSession(""); }} required autoComplete="tel" />
+      {otpOn === true && session && (
+        <input inputMode="numeric" autoComplete="one-time-code" placeholder={t.otp} value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} required />
+      )}
+      {otpOn === false && (
+        <input placeholder={t.last4} value={last4} onChange={(e) => setLast4(e.target.value.trim().slice(-4))} maxLength={20} required />
+      )}
+      {err && <p className="err">{err}</p>}
+      <button className="btn" disabled={busy || otpOn === null}>{busy ? "…" : otpOn && !session ? t.sendOtp : t.verify}</button>
+      {otpOn && session && <button type="button" className="link" onClick={sendOtp}>Resend OTP</button>}
+    </form>
+  );
+}
+
+function CheckPane({ t, onDone }) {
   const [s, setS] = useState(null);
   const [i, setI] = useState(0);
   const [ans, setAns] = useState([]);
@@ -349,7 +444,8 @@ function CheckSheet({ t, onClose, onDone }) {
   }
 
   return (
-    <Sheet title={t.checkTitle} onClose={onClose}>
+    <div className="card">
+      <h3>📝 {t.checkTitle}</h3>
       {!s ? (
         <div className="form">
           <p className="muted">{t.checkIntro}</p>
@@ -372,6 +468,6 @@ function CheckSheet({ t, onClose, onDone }) {
           <button className="link" onClick={back}>← {t.back}</button>
         </div>
       )}
-    </Sheet>
+    </div>
   );
 }

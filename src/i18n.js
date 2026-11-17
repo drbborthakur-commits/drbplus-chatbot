@@ -7,6 +7,10 @@ export const LANGS = [
 
 export const T = {
   en: {
+    tabChat: "Ask AI", tabBook: "Book", tabToken: "My Token", tabCheck: "Self-check",
+    tokenTitle: "My token", tokenIntro: "See your online registration number.", sendOtp: "Send OTP", otp: "Enter OTP", verify: "Verify & show",
+    last4: "Payment ID – last 4 characters", noBookings: "No upcoming bookings for this number.",
+    continuePay: "Continue to secure payment · ₹{fee}", payPageNote: "You'll finish payment on Razorpay's secure page, then return here with your token.",
     subtitle: "AI help · Booking · Self-check",
     greeting: "Namaste! I'm the DRB PLUS AI assistant, powered by Claude.\n\nI can answer questions on mental health and addiction, book your visit with Dr. Biswadeep Borthakur, or run a quick self-check.\n\nHow can I help you today?",
     book: "Book appointment", check: "Self-check", timings: "Timings & location", call: "Call / WhatsApp",
@@ -27,6 +31,10 @@ export const T = {
     timingsTitle: "Where & when Dr. Borthakur sits", directions: "Directions",
   },
   as: {
+    tabChat: "AI সোধক", tabBook: "বুকিং", tabToken: "মোৰ টোকেন", tabCheck: "আত্ম-পৰীক্ষা",
+    tokenTitle: "মোৰ টোকেন", tokenIntro: "আপোনাৰ অনলাইন পঞ্জীয়ন নম্বৰ চাওক।", sendOtp: "OTP পঠিয়াওক", otp: "OTP লিখক", verify: "নিশ্চিত কৰি চাওক",
+    last4: "পেমেণ্ট আইডিৰ শেষৰ ৪টা আখৰ (Razorpay ৰচিদত)", noBookings: "এই নম্বৰত কোনো আগন্তুক বুকিং নাই।",
+    continuePay: "সুৰক্ষিত পেমেণ্টলৈ যাওক · ₹{fee}", payPageNote: "Razorpay-ৰ সুৰক্ষিত পৃষ্ঠাত পেমেণ্ট সম্পূৰ্ণ কৰি ইয়ালৈ টোকেনৰ সৈতে উভতি আহিব।",
     subtitle: "AI সহায় · এপইণ্টমেণ্ট · আত্ম-পৰীক্ষা",
     greeting: "নমস্কাৰ! মই DRB PLUS-ৰ AI সহায়ক, Claude-ৰ দ্বাৰা চালিত।\n\nমানসিক স্বাস্থ্য আৰু নিচাসক্তি সম্পৰ্কীয় প্ৰশ্নৰ উত্তৰ দিব পাৰোঁ, ডাঃ বিশ্বদীপ বৰঠাকুৰৰ সৈতে আপোনাৰ এপইণ্টমেণ্ট লৈ দিব পাৰোঁ, বা এটা সৰু আত্ম-পৰীক্ষা কৰাব পাৰোঁ।\n\nআজি মই আপোনাক কেনেকৈ সহায় কৰিব পাৰোঁ?",
     book: "এপইণ্টমেণ্ট লওক", check: "আত্ম-পৰীক্ষা", timings: "সময় আৰু ঠিকনা", call: "ফোন / WhatsApp",
@@ -47,6 +55,10 @@ export const T = {
     timingsTitle: "ডাঃ বৰঠাকুৰক ক'ত আৰু কেতিয়া পাব", directions: "পথ নিৰ্দেশনা",
   },
   hi: {
+    tabChat: "AI से पूछें", tabBook: "बुक करें", tabToken: "मेरा टोकन", tabCheck: "आत्म-जाँच",
+    tokenTitle: "मेरा टोकन", tokenIntro: "अपना ऑनलाइन पंजीकरण नंबर देखें।", sendOtp: "OTP भेजें", otp: "OTP डालें", verify: "जाँचें और दिखाएँ",
+    last4: "पेमेंट आईडी के आखिरी 4 अक्षर (Razorpay रसीद पर)", noBookings: "इस नंबर पर कोई आगामी बुकिंग नहीं है।",
+    continuePay: "सुरक्षित भुगतान पर जाएँ · ₹{fee}", payPageNote: "Razorpay के सुरक्षित पेज पर भुगतान पूरा करें, फिर टोकन के साथ यहाँ लौटें।",
     subtitle: "AI सहायता · बुकिंग · आत्म-जाँच",
     greeting: "नमस्ते! मैं DRB PLUS का AI सहायक हूँ, Claude द्वारा संचालित।\n\nमैं मानसिक स्वास्थ्य और नशे से जुड़े सवालों के जवाब दे सकता हूँ, डॉ. बिस्वदीप बोरठाकुर के साथ आपकी अपॉइंटमेंट बुक कर सकता हूँ, या एक छोटी आत्म-जाँच करवा सकता हूँ।\n\nआज मैं आपकी कैसे मदद करूँ?",
     book: "अपॉइंटमेंट बुक करें", check: "आत्म-जाँच", timings: "समय और पता", call: "कॉल / WhatsApp",
