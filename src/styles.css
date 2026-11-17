@@ -74,3 +74,19 @@ a{color:var(--navy)}
 .opt{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px;text-align:left}
 .opt.on{border-color:var(--navy)}
 .link{background:none;border:0;color:var(--muted);align-self:flex-start;padding:6px 0}
+/* confirmation / track pages */
+.page .thread{gap:12px}
+.center{text-align:center;align-self:center}
+.card.center{align-items:center}
+.spinner{width:34px;height:34px;border-radius:50%;border:4px solid #e3ded2;border-top-color:var(--teal);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ticket{background:#fff;border-radius:18px;padding:18px;border:2px dashed var(--navy);display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 20px rgba(12,51,89,.08)}
+.ticket.warn{border-color:var(--coral)}
+.t-label{font-size:12px;letter-spacing:.14em;color:var(--muted);text-align:center;font-weight:600}
+.t-no{font-family:"Cormorant Garamond",serif;font-weight:700;font-size:44px;line-height:1.05;color:var(--navy);text-align:center;letter-spacing:.02em}
+.t-serial{text-align:center;color:var(--coral);font-weight:600;margin-bottom:6px}
+.t-row{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:6px;font-size:14px}
+.t-row span{color:var(--muted)}
+.t-row strong{text-align:right}
+.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+a.btn{display:block}
