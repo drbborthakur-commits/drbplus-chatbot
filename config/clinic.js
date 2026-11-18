@@ -20,7 +20,7 @@ export const CLINIC = {
   bookingUrl: "https://pages.razorpay.com/drbplus", // Razorpay booking page (UPI, card, netbanking, wallet)
   // true  = pay inside the app (needs this web address approved in Razorpay → Websites & API keys)
   // false = after choosing clinic/date, patient pays on the Razorpay page above, then returns to the token screen
-  inAppPayment: false,
+  inAppPayment: true,
   bookingDaysAhead: 30,              // how far ahead patients can book
 
   // Days: 0 = Sunday … 6 = Saturday. endHour = 24-hour clock (IST).
